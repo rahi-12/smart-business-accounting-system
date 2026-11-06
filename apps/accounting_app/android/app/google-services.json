@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "473139025476",
+    "project_id": "business-accounting-syst-98de3",
+    "storage_bucket": "business-accounting-syst-98de3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:473139025476:android:a70419108c5d540cc18e11",
+        "android_client_info": {
+          "package_name": "com.example.accounting_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCufr3oWyko1fWBVZZOK49Hb_7hdMhTGRo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
