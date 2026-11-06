@@ -5,6 +5,7 @@ import '../../models/user_profile.dart';
 import '../../services/api_service.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../utils/friendly_error.dart';
+import '../customer/customer_screen.dart';
 import '../expense/expense_screen.dart';
 import '../income/income_screen.dart';
 
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _NavItem(label: 'Dashboard', icon: Icons.dashboard_rounded),
     _NavItem(label: 'Income', icon: Icons.trending_up_rounded),
     _NavItem(label: 'Expenses', icon: Icons.payments_rounded),
+    _NavItem(label: 'Customers', icon: Icons.people_alt_rounded),
     _NavItem(label: 'Transactions', icon: Icons.swap_horiz_rounded),
     _NavItem(label: 'Reports', icon: Icons.bar_chart_rounded),
   ];
@@ -36,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final List<_ModuleShortcut> _moduleShortcuts = const [
     _ModuleShortcut('Income', Icons.trending_up_rounded, Color(0xFF1E7A5B)),
     _ModuleShortcut('Expenses', Icons.payments_rounded, Color(0xFFDBA13C)),
+    _ModuleShortcut('Customers', Icons.people_alt_rounded, Color(0xFF58A6FF)),
   ];
 
   @override
@@ -107,8 +110,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final appBarTitle = switch (_selectedIndex) {
       1 => 'Income',
       2 => 'Expenses',
-      3 => 'Transactions',
-      4 => 'Reports',
+      3 => 'Customers',
+      4 => 'Transactions',
+      5 => 'Reports',
       _ => _navigationItems[_selectedIndex].label,
     };
 
@@ -121,12 +125,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           onRetry: () => _loadDashboard(forceRefresh: true),
           moduleShortcuts: _moduleShortcuts,
         ),
-      3 => const _ModulePage(
+      3 => const CustomerScreen(),
+      4 => const _ModulePage(
           title: 'Transactions',
           description: 'Coming soon — transaction history and cash movement tools are still in progress.',
           icon: Icons.swap_horiz_rounded,
         ),
-      4 => const _ModulePage(
+      5 => const _ModulePage(
           title: 'Reports',
           description: 'Coming soon — advanced financial reports and insights will be added here.',
           icon: Icons.bar_chart_rounded,
@@ -175,6 +180,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           if (index == 2) {
             final result = await Navigator.of(context).push<bool>(
               MaterialPageRoute(builder: (_) => const ExpenseScreen()),
+            );
+            if (result == true) {
+              _loadDashboard(forceRefresh: true);
+            }
+            return;
+          }
+
+          if (index == 3) {
+            final result = await Navigator.of(context).push<bool>(
+              MaterialPageRoute(builder: (_) => const CustomerScreen()),
             );
             if (result == true) {
               _loadDashboard(forceRefresh: true);
@@ -681,8 +696,9 @@ class _DashboardContent extends StatelessWidget {
                     children: moduleShortcuts.map((shortcut) {
                       final isIncomeShortcut = shortcut.name == 'Income';
                       final isExpenseShortcut = shortcut.name == 'Expenses';
+                      final isCustomerShortcut = shortcut.name == 'Customers';
                       return InkWell(
-                        onTap: isIncomeShortcut || isExpenseShortcut
+                        onTap: isIncomeShortcut || isExpenseShortcut || isCustomerShortcut
                             ? () async {
                                 final homeState = context
                                     .findAncestorStateOfType<_HomeScreenState>();
@@ -691,7 +707,9 @@ class _DashboardContent extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (_) => isIncomeShortcut
                                         ? const IncomeScreen()
-                                        : const ExpenseScreen(),
+                                        : isExpenseShortcut
+                                        ? const ExpenseScreen()
+                                        : const CustomerScreen(),
                                   ),
                                 );
                                 if (result == true) {

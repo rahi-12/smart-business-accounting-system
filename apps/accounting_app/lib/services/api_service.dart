@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
+import '../models/customer.dart';
 import '../models/dashboard_summary.dart';
 import '../models/expense.dart';
 import '../models/income.dart';
@@ -89,6 +90,91 @@ class ApiService {
     }
 
     return IncomePage.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<CustomerPage> getCustomers({Map<String, String>? queryParameters}) async {
+    final query = queryParameters == null || queryParameters.isEmpty
+        ? ''
+        : '?${queryParameters.entries.map((entry) => '${Uri.encodeComponent(entry.key)}=${Uri.encodeComponent(entry.value)}').join('&')}';
+
+    final response = await _sendRequest('GET', '/api/customers$query');
+    final payload = _decodeBody(response.body);
+    final data = payload['data'] ?? payload;
+
+    if (data is! Map) {
+      throw ApiException('Customer records could not be loaded.', response.statusCode);
+    }
+
+    return CustomerPage.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<CustomerRecord> createCustomer({
+    required String name,
+    String? phone,
+    String? email,
+    String? address,
+    String? notes,
+  }) async {
+    final body = {
+      'name': name.trim(),
+      'phone': _normalizeOptionalString(phone),
+      'email': _normalizeOptionalString(email),
+      'address': _normalizeOptionalString(address),
+      'notes': _normalizeOptionalString(notes),
+    };
+
+    final response = await _sendRequest('POST', '/api/customers', body: body);
+    final payload = _decodeBody(response.body);
+    final data = payload['data'] ?? payload;
+
+    if (data is! Map) {
+      throw ApiException('Customer could not be created.', response.statusCode);
+    }
+
+    return CustomerRecord.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<CustomerRecord> updateCustomer({
+    required String id,
+    required String name,
+    String? phone,
+    String? email,
+    String? address,
+    String? notes,
+  }) async {
+    final body = {
+      'name': name.trim(),
+      'phone': _normalizeOptionalString(phone),
+      'email': _normalizeOptionalString(email),
+      'address': _normalizeOptionalString(address),
+      'notes': _normalizeOptionalString(notes),
+    };
+
+    final response = await _sendRequest('PUT', '/api/customers/$id', body: body);
+    final payload = _decodeBody(response.body);
+    final data = payload['data'] ?? payload;
+
+    if (data is! Map) {
+      throw ApiException('Customer could not be updated.', response.statusCode);
+    }
+
+    return CustomerRecord.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<CustomerRecord> getCustomer(String id) async {
+    final response = await _sendRequest('GET', '/api/customers/$id');
+    final payload = _decodeBody(response.body);
+    final data = payload['data'] ?? payload;
+
+    if (data is! Map) {
+      throw ApiException('Customer could not be loaded.', response.statusCode);
+    }
+
+    return CustomerRecord.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  Future<void> deleteCustomer(String id) async {
+    await _sendRequest('DELETE', '/api/customers/$id');
   }
 
   Future<IncomeRecord> createIncome({
@@ -246,6 +332,14 @@ class ApiService {
     return normalized;
   }
 
+  String? _normalizeOptionalString(String? value) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) {
+      return null;
+    }
+    return normalized;
+  }
+
   Future<http.Response> _sendRequest(
     String method,
     String path, {
@@ -304,6 +398,12 @@ class ApiService {
         }
       }
 
+      if (response.statusCode == 409) {
+        final payload = _decodeBody(response.body);
+        final message = payload['message'] as String? ?? 'Duplicate record.';
+        throw ApiException(message, response.statusCode);
+      }
+
       if (response.statusCode >= 400) {
         final payload = _decodeBody(response.body);
         final message = _statusMessage(response.statusCode, payload);
@@ -329,7 +429,10 @@ class ApiService {
       return 'Your session has expired. Please sign in again.';
     }
     if (statusCode == 404) {
-      return 'The requested record could not be found.';
+      return payload['message'] as String? ?? 'The requested record could not be found.';
+    }
+    if (statusCode == 409) {
+      return payload['message'] as String? ?? 'This value already exists.';
     }
     if (statusCode == 400 || statusCode == 422) {
       final details =
@@ -339,7 +442,7 @@ class ApiService {
       return details;
     }
     if (statusCode >= 500) {
-      return 'The server could not process this request right now.';
+      return payload['message'] as String? ?? 'The server could not process this request right now.';
     }
     return payload['message'] as String? ?? 'Request failed.';
   }
