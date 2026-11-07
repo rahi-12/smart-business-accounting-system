@@ -51,3 +51,13 @@ Desktop.ini
 *.log
 *.tmp
 *.bak
+# Firebase Admin SDK private keys
+**/*service-account*.json
+**/firebase-adminsdk*.json
+**/*-firebase-adminsdk-*.json
+*serviceAccount*.json
+*credentials*.json
+*.pem
+*.key
+*.p12
+backend/config/*.local.*
