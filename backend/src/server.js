@@ -12,6 +12,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const incomeRoutes = require("./routes/incomeRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
+const invoiceRoutes = require("./routes/invoiceRoutes");
 const { authenticateUser } = require("./middleware/authMiddleware");
 
 const app = express();
@@ -63,6 +64,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/income", incomeRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/invoices", invoiceRoutes);
 
 // Basic health-check route
 app.get("/api/health", (req, res) => {
